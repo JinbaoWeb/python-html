@@ -9,7 +9,7 @@ runs:
         python-version: '3.x'
 
     - name: Install Markdown Library
-      run: pip install markdown
+      run: pip install markdown pygments
       shell: bash
 
     - name: Run Converter
