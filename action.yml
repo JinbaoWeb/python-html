@@ -1,0 +1,18 @@
+name: 'MD to HTML Pro'
+description: 'Transforms your markdown repo into a static site'
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install Markdown Library
+      run: pip install markdown
+      shell: bash
+
+    - name: Run Converter
+      # 注意：${{ github.action_path }} 指向工具库所在位置
+      run: python ${{ github.action_path }}/convert.py
+      shell: bash
