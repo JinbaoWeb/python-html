@@ -18,6 +18,7 @@ from datetime import datetime
 # 配置
 DOCS_DIR = "."
 OUTPUT_DIR = "output"
+TEMPLATE_DIR = Path(__file__).parent.resolve()
 
 # 默认配置
 DEFAULT_CONFIG = {
@@ -54,78 +55,6 @@ DEFAULT_CONFIG = {
 
 # Category 映射（文件夹名 -> 显示名称）- 从 nav_menu 中自动提取
 CATEGORY_NAMES = {}
-
-# GitHub 仓库配置
-GITHUB_REPO = None  # 例如: "username/repo" 或 "https://github.com/username/repo.git"
-
-
-def clone_github_repo(repo_url, branch="main"):
-    """从 GitHub 仓库克隆并提取 docs 目录"""
-    global DOCS_DIR
-
-    # 解析仓库 URL
-    if repo_url.startswith("http"):
-        # 完整 URL
-        parsed = urlparse(repo_url)
-        path = parsed.path.lstrip("/")
-        if path.endswith(".git"):
-            path = path[:-4]
-        repo_name = path.split("/")[-1]
-    else:
-        # username/repo 格式
-        repo_name = repo_url.split("/")[-1]
-        repo_url = f"https://github.com/{repo_url}.git"
-
-    print(f"正在克隆仓库: {repo_url}")
-
-    # 创建临时目录
-    temp_dir = tempfile.mkdtemp()
-    repo_dir = Path(temp_dir) / repo_name
-
-    try:
-        # 克隆仓库（禁用交互式认证提示）
-        env = os.environ.copy()
-        env['GIT_TERMINAL_PROMPT'] = '0'
-        env['GIT_ASKPASS'] = 'echo'
-        subprocess.run(
-            ["git", "clone", "--depth", "1", "--branch", branch, repo_url, str(repo_dir)],
-            check=True,
-            capture_output=True,
-            text=True,
-            env=env
-        )
-
-        # 检查 docs 目录
-        docs_source = repo_dir / "docs"
-        if not docs_source.exists():
-            # 尝试其他常见目录名
-            for alt_name in ["_posts", "content", "blog", "articles"]:
-                if (repo_dir / alt_name).exists():
-                    docs_source = repo_dir / alt_name
-                    break
-            else:
-                print(f"[错误] 仓库中未找到 docs 目录")
-                return None
-
-        # 移动到当前目录
-        if Path(DOCS_DIR).exists():
-            shutil.rmtree(DOCS_DIR)
-        shutil.copytree(docs_source, DOCS_DIR)
-
-        print(f"[成功] 已从 GitHub 仓库提取 docs 目录")
-        return DOCS_DIR
-
-    except subprocess.CalledProcessError as e:
-        print(f"[错误] 克隆仓库失败: {e.stderr}")
-        return None
-    except Exception as e:
-        print(f"[错误] 处理仓库时出错: {e}")
-        return None
-    finally:
-        # 清理临时目录
-        if Path(temp_dir).exists():
-            shutil.rmtree(temp_dir)
-
 
 def load_config():
     """加载配置文件"""
@@ -847,10 +776,13 @@ def main():
     # 复制静态文件到输出目录
     static_files = ['styles.css', 'script.js']
     for static_file in static_files:
-        if Path(static_file).exists():
+        src = TEMPLATE_DIR / static_file
+        if src.exists():
             dest = output_path / static_file
-            shutil.copy2(static_file, dest)
+            shutil.copy2(src, dest)
             print(f"[复制] {static_file}")
+        else:
+            print(f"❌ [未找到源文件] {src}")
 
     total_articles = 0
     categories_info = []  # 收集分类信息用于生成首页
