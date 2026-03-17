@@ -806,24 +806,6 @@ def main():
     import sys
     sys.stdout.reconfigure(encoding='utf-8')
 
-    # 解析命令行参数
-    parser = argparse.ArgumentParser(description="Markdown 转 HTML 博客生成器")
-    parser.add_argument('--repo', '-r', type=str, help='GitHub 仓库地址 (如: username/repo 或 https://github.com/username/repo.git)')
-    parser.add_argument('--branch', '-b', type=str, default='main', help='GitHub 仓库分支 (默认: main)')
-    parser.add_argument('--output', '-o', type=str, default='blog', help='输出目录 (默认: blog)')
-    parser.add_argument('--docs', '-d', type=str, default='docs', help='docs 目录名 (默认: docs)')
-    args = parser.parse_args()
-
-    global DOCS_DIR, OUTPUT_DIR
-    OUTPUT_DIR = args.output
-    DOCS_DIR = args.docs
-
-    # 如果指定了 GitHub 仓库，则克隆
-    if args.repo:
-        result = clone_github_repo(args.repo, args.branch)
-        if not result:
-            return
-
     # 加载配置
     config = load_config()
 
