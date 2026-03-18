@@ -35,9 +35,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentScroll = window.pageYOffset;
 
         if (currentScroll > 50) {
-            navbar.style.background = 'rgba(13, 17, 23, 0.95)';
+            navbar.style.background = 'rgba(255, 255, 255, 0.95)';
         } else {
-            navbar.style.background = 'rgba(13, 17, 23, 0.85)';
+            navbar.style.background = 'rgba(255, 255, 255, 0.85)';
         }
 
         lastScroll = currentScroll;
