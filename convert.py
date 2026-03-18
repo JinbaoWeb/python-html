@@ -87,8 +87,15 @@ def load_config():
 
     return config
 
-# HTML 模板
-HTML_TEMPLATE = """<!DOCTYPE html>
+
+# ============================================================
+# HTML 模板模块 - 按生成顺序: 文章 -> Category Index -> 首页
+# ============================================================
+
+# ---------- 公共模块 ----------
+
+# 基础 HTML 头部（所有页面共用）
+HTML_HEAD = """<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -97,15 +104,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <link rel="stylesheet" href="{css_path}styles.css">
+    {extra_head}
 </head>
-<body>
-    <nav class="navbar" id="navbar">
+<body>"""
+
+# 导航栏
+HTML_NAV = """    <nav class="navbar" id="navbar">
         <div class="nav-container">
-            <a href="index.html" class="nav-logo">
+            <a href="{home_link}" class="nav-logo">
                 <span class="logo-icon">◈</span>
-                <span class="logo-text">Alex's Blog</span>
+                <span class="logo-text">{site_title}</span>
             </a>
             <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
                 <span class="bar"></span>
@@ -113,18 +122,50 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 <span class="bar"></span>
             </button>
             <ul class="nav-menu" id="navMenu">
-                <li><a href="index.html" class="nav-link">首页</a></li>
-                <li><a href="rec-sys" class="nav-link">推荐算法</a></li>
-                <li><a href="ml" class="nav-link">机器学习</a></li>
-                <li><a href="dl" class="nav-link">深度学习</a></li>
-                <li><a href="agent" class="nav-link">Agent</a></li>
-                <li><a href="https://github.com" target="_blank" class="nav-link">GitHub</a></li>
-                <li><a href="index.html#about" class="nav-link">关于</a></li>
+                {nav_items}
             </ul>
         </div>
-    </nav>
+    </nav>"""
 
-    <main class="article-container">
+# 页脚
+HTML_FOOTER = """    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">{author}</p>
+            <p class="footer-text">{copyright}</p>
+            <p class="footer-text">{built_with}</p>
+        </div>
+    </footer>"""
+
+# 基础 JS 引用
+HTML_BASE_SCRIPTS = """    <script src="{script_path}script.js"></script>
+</body>
+</html>"""
+
+
+# ---------- 文章页面模块 ----------
+
+# 文章页面专用头部（包含 highlight.js 和 MathJax）
+ARTICLE_EXTRA_HEAD = """    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script>
+        window.MathJax = {{
+            tex: {{
+                inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+                displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']]
+            }},
+            svg: {{ fontCache: 'global' }},
+            startup: {{
+                ready: () => {{
+                    MathJax.startup.defaultReady();
+                }}
+            }}
+        }};
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>"""
+
+# 文章内容区域
+ARTICLE_CONTENT = """    <main class="article-container">
         <article class="article">
             <header class="article-header">
                 <div class="article-meta">
@@ -145,185 +186,30 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 </nav>
             </footer>
         </article>
-    </main>
+    </main>"""
 
-    <footer class="footer">
-        <div class="container">
-            <p class="footer-text">© 2026 Alex's Blog. All rights reserved.</p>
-            <p class="footer-text">Built with love using HTML, CSS & JavaScript</p>
-        </div>
-    </footer>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script>hljs.highlightAll();</script>
+# ---------- Category Index 模块 ----------
 
-    <script>
-        window.MathJax = {{
-            tex: {{
-                inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
-                displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']]
-            }},
-            svg: {{ fontCache: 'global' }},
-            startup: {{
-                ready: () => {{
-                    MathJax.startup.defaultReady();
-                }}
-            }}
-        }};
-    </script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-
-    <script src="/script.js"></script>
-</body>
-</html>
-"""
-
-# 首页模板
-INDEX_TEMPLATE = """<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alex's Blog | 技术与思考</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/styles.css">
-</head>
-<body>
-    <nav class="navbar" id="navbar">
-        <div class="nav-container">
-            <a href="index.html" class="nav-logo">
-                <span class="logo-icon">◈</span>
-                <span class="logo-text">Alex's Blog</span>
-            </a>
-            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-            </button>
-            <ul class="nav-menu" id="navMenu">
-                <li><a href="index.html" class="nav-link active">首页</a></li>
-                <li><a href="rec-sys" class="nav-link">推荐算法</a></li>
-                <li><a href="ml" class="nav-link">机器学习</a></li>
-                <li><a href="dl" class="nav-link">深度学习</a></li>
-                <li><a href="agent" class="nav-link">Agent</a></li>
-                <li><a href="https://github.com" target="_blank" class="nav-link">GitHub</a></li>
-                <li><a href="#about" class="nav-link">关于</a></li>
-            </ul>
-        </div>
-    </nav>
-
-    <section class="hero" id="about">
-        <div class="hero-bg"></div>
-        <div class="hero-content">
-            <h1 class="hero-title">你好，我是 <span class="highlight">Alex</span></h1>
-            <p class="hero-subtitle">推荐算法 | 机器学习 | 深度学习 | Agent</p>
-            <p class="hero-bio">
-                专注于推荐系统算法研究与实践。<br>
-                热爱机器学习与深度学习。<br>
-                在这里记录学习笔记与技术思考。
-            </p>
-
-            <div class="category-grid">
-                {category_cards}
-            </div>
-
-            <div class="hero-social">
-                <a href="https://github.com" target="_blank" class="social-btn" aria-label="GitHub">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-                    </svg>
-                </a>
-                <a href="https://twitter.com" target="_blank" class="social-btn" aria-label="Twitter">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                    </svg>
-                </a>
-                <a href="mailto:hello@example.com" class="social-btn" aria-label="Email">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-                    </svg>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <footer class="footer">
-        <div class="container">
-            <p class="footer-text">© 2026 Alex's Blog. All rights reserved.</p>
-            <p class="footer-text">Built with love using HTML, CSS & JavaScript</p>
-        </div>
-    </footer>
-
-    <script src="/script.js"></script>
-</body>
-</html>
-"""
-
-CATEGORY_INDEX_TEMPLATE = """<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{category_name} | Alex's Blog</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/styles.css">
-</head>
-<body>
-    <nav class="navbar" id="navbar">
-        <div class="nav-container">
-            <a href="../index.html" class="nav-logo">
-                <span class="logo-icon">◈</span>
-                <span class="logo-text">Alex's Blog</span>
-            </a>
-            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-            </button>
-            <ul class="nav-menu" id="navMenu">
-                <li><a href="../index.html" class="nav-link">首页</a></li>
-                <li><a href="../rec-sys" class="nav-link">推荐算法</a></li>
-                <li><a href="../ml" class="nav-link">机器学习</a></li>
-                <li><a href="../dl" class="nav-link">深度学习</a></li>
-                <li><a href="../agent" class="nav-link">Agent</a></li>
-                <li><a href="https://github.com" target="_blank" class="nav-link">GitHub</a></li>
-                <li><a href="../index.html#about" class="nav-link">关于</a></li>
-            </ul>
-        </div>
-    </nav>
-
-    <section class="category-header">
+# Category 头部区域
+CATEGORY_HEADER = """    <section class="category-header">
         <div class="container">
             <h1 class="category-title">{category_name}</h1>
             <p class="category-subtitle">{article_count} 篇文章</p>
         </div>
-    </section>
+    </section>"""
 
-    <section class="blog-section">
+# Category 文章列表区域
+CATEGORY_CONTENT = """    <section class="blog-section">
         <div class="container">
             <div class="blog-grid">
                 {articles}
             </div>
         </div>
-    </section>
+    </section>"""
 
-    <footer class="footer">
-        <div class="container">
-            <p class="footer-text">© 2026 Alex's Blog. All rights reserved.</p>
-            <p class="footer-text">Built with love using HTML, CSS & JavaScript</p>
-        </div>
-    </footer>
-
-    <script src="/script.js"></script>
-</body>
-</html>
-"""
-
-ARTICLE_CARD_TEMPLATE = """<article class="blog-card">
+# 文章卡片模板
+ARTICLE_CARD = """<article class="blog-card">
     <div class="card-header">
         <time class="card-date">{date}</time>
         <div class="card-tags">
@@ -339,6 +225,248 @@ ARTICLE_CARD_TEMPLATE = """<article class="blog-card">
     <a href="{link}" class="card-link">阅读全文 →</a>
 </article>"""
 
+
+# ---------- 首页模块 ----------
+
+# Hero 区域
+HERO_SECTION = """    <section class="hero" id="about">
+        <div class="hero-bg"></div>
+        <div class="hero-content">
+            <h1 class="hero-title">{hero_title}</h1>
+            <p class="hero-subtitle">{hero_subtitle}</p>
+            <p class="hero-bio">
+                {hero_bio}
+            </p>
+
+            <div class="category-grid">
+                {category_cards}
+            </div>
+
+            <div class="hero-social">
+                {social_icons}
+            </div>
+        </div>
+    </section>"""
+
+
+# ============================================================
+# 模板组装函数 - 按生成顺序
+# ============================================================
+
+def build_nav_html(config, active_href='', relative_path=''):
+    """构建导航栏 HTML"""
+    nav_menu = config.get('nav_menu', [])
+    site_title = config.get('site', {}).get('title', "Alex's Blog")
+
+    # 计算相对路径
+    if relative_path:
+        home_link = f"{relative_path}index.html"
+    else:
+        home_link = "index.html"
+
+    nav_items = ""
+    for item in nav_menu:
+        href = item.get('href', '#')
+        name = item.get('name', '')
+        is_external = item.get('external', False)
+
+        # 保存原始 href 用于匹配激活状态
+        original_href = href
+
+        # 处理链接前缀
+        if not is_external and not href.startswith('#') and not href.startswith('http'):
+            if relative_path:
+                href = f"{relative_path}{href}"
+
+        # 处理激活状态（使用原始 href 匹配，不包含相对路径前缀）
+        is_active = 'active' if (active_href and original_href == active_href) else ''
+
+        # 外部链接处理
+        target = 'target="_blank"' if is_external or href.startswith('http') else ''
+
+        nav_items += f'<li><a href="{href}" class="nav-link {is_active}" {target}>{name}</a></li>\n                '
+
+    return HTML_NAV.format(
+        home_link=home_link,
+        site_title=site_title,
+        nav_items=nav_items
+    )
+
+
+def build_footer_html(config, author=''):
+    """构建页脚 HTML"""
+    footer = config.get('footer', {})
+    # 如果没有传入 author，从配置中获取
+    if not author:
+        author = config.get('site', {}).get('author', '')
+    return HTML_FOOTER.format(
+        author=author,
+        copyright=footer.get('copyright', ''),
+        built_with=footer.get('built_with', '')
+    )
+
+
+def build_article_html(config, title, date, category, content, prev_link, next_link, relative_path=''):
+    """组装文章页面 HTML"""
+    site = config.get('site', {})
+
+    css_path = '/'
+    script_path = '/'
+
+    # 构建各部分
+    head_title = f"{title} | {site.get('title', 'Alex\'s Blog')}"
+
+    html = HTML_HEAD.format(
+        title=head_title,
+        css_path=css_path,
+        extra_head=ARTICLE_EXTRA_HEAD
+    )
+
+    html += build_nav_html(config, active_href='', relative_path=relative_path)
+    html += ARTICLE_CONTENT.format(
+        date=date,
+        category=category,
+        title=title,
+        content=content,
+        prev_link=prev_link,
+        next_link=next_link
+    )
+    html += build_footer_html(config)
+    html += HTML_BASE_SCRIPTS.format(script_path=script_path)
+
+    return html
+
+
+def build_category_index_html(config, category_name, display_name, articles, relative_path=''):
+    """组装 Category 索引页 HTML"""
+    site = config.get('site', {})
+
+    # 计算资源路径（Category 页在子目录，使用 ../）
+    if relative_path:
+        css_path = relative_path
+        script_path = relative_path
+    else:
+        css_path = '../'
+        script_path = '../'
+
+    # 构建各部分
+    head_title = f"{display_name} | {site.get('title', 'Alex's Blog')}"
+
+    html = HTML_HEAD.format(
+        title=head_title,
+        css_path=css_path,
+        extra_head=''
+    )
+
+    # 导航栏（Category 页需要激活对应 category，并使用 ../ 相对路径）
+    nav_relative_path = '../' if not relative_path else relative_path
+    html += build_nav_html(config, active_href=category_name, relative_path=nav_relative_path)
+
+    # Category 头部
+    html += CATEGORY_HEADER.format(
+        category_name=display_name,
+        article_count=len(articles)
+    )
+
+    # 文章列表
+    cards_html = ""
+    for article in articles:
+        # 去掉 category_name/ 前缀和 .html 后缀
+        filename = article['filename'].replace(f'{category_name}/', '').replace('.html', '')
+        cards_html += ARTICLE_CARD.format(
+            date=article['date'],
+            tag=article['tag'],
+            title=article['title'],
+            excerpt=article['excerpt'],
+            link=filename
+        ) + "\n"
+
+    html += CATEGORY_CONTENT.format(articles=cards_html)
+    html += build_footer_html(config)
+    html += HTML_BASE_SCRIPTS.format(script_path=script_path)
+
+    return html
+
+
+def build_index_html(config, categories_info):
+    """组装首页 HTML"""
+    site = config.get('site', {})
+    nav_menu = config.get('nav_menu', [])
+    hero = config.get('hero', {})
+    social = config.get('social', [])
+    footer = config.get('footer', {})
+
+    # 构建各部分
+    head_title = f"{site.get('title', 'Alex\'s Blog')} | {site.get('subtitle', '技术与思考')}"
+
+    html = HTML_HEAD.format(
+        title=head_title,
+        css_path='/',
+        extra_head=''
+    )
+
+    # 导航栏（首页激活）
+    html += build_nav_html(config, active_href='index.html', relative_path='')
+
+    # 生成导航菜单项（用于首页）
+    nav_html = ""
+    for item in nav_menu:
+        href = item.get('href', '#')
+        name = item.get('name', '')
+        is_active = 'active' if item.get('is_home') else ''
+        external = 'target="_blank"' if item.get('external') else ''
+        nav_html += f'<li><a href="{href}" class="nav-link {is_active}" {external}>{name}</a></li>\n                '
+
+    # 生成分类卡片
+    category_cards = ""
+    for cat in categories_info:
+        category_cards += f"""                <a href="{cat['name']}" class="category-card">
+                    <span class="category-card-name">{cat['display_name']}</span>
+                    <span class="category-card-count">{cat['count']} 篇</span>
+                </a>
+"""
+
+    # 生成社交链接
+    social_icons = {
+        'github': '<path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>',
+        'twitter': '<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>',
+        'email': '<path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>'
+    }
+
+    social_html = ""
+    for item in social:
+        url = item.get('url', '#')
+        name = item.get('name', '')
+        icon = item.get('icon', 'github')
+        icon_path = social_icons.get(icon, social_icons['github'])
+        target = 'target="_blank"' if item.get('external') or url.startswith('http') else ''
+        social_html += f"""                <a href="{url}" class="social-btn" aria-label="{name}" {target}>
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        {icon_path}
+                    </svg>
+                </a>
+"""
+
+    # Hero 标题替换 author
+    hero_title = hero.get('title', '').format(author=site.get('author', 'Alex'))
+
+    html += HERO_SECTION.format(
+        hero_title=hero_title,
+        hero_subtitle=hero.get('subtitle', ''),
+        hero_bio=hero.get('bio', '').replace(chr(10), '<br>'),
+        category_cards=category_cards,
+        social_icons=social_html
+    )
+
+    html += build_footer_html(config)
+    html += HTML_BASE_SCRIPTS.format(script_path='/')
+
+    return html
+
+
+# ============================================================
+# Markdown 转换函数
+# ============================================================
 
 def convert_markdown_to_html(markdown_text):
     """将 Markdown 转换为 HTML"""
@@ -495,8 +623,12 @@ def get_date_from_filename(filename):
     return datetime.now().strftime("%Y-%m-%d")
 
 
-def process_category(category_dir, category_name, output_dir):
-    """处理单个 category 目录"""
+# ============================================================
+# 主处理函数 - 按生成顺序: 文章 -> Category Index -> 首页
+# ============================================================
+
+def process_category(category_dir, category_name, config, output_dir):
+    """处理单个 category 目录 - 生成文章"""
     articles = []
 
     # 创建输出子目录（保持目录结构）
@@ -548,14 +680,18 @@ def process_category(category_dir, category_name, output_dir):
         if not next_link:
             next_link = "#"
 
-        # 生成 HTML
-        html = HTML_TEMPLATE.format(
+        # ========== 步骤 1: 生成文章页面 ==========
+        # 使用模块化模板生成文章
+        relative_path = f"{category_dir.name}/"
+        html = build_article_html(
+            config=config,
             title=title,
             date=date,
             category=category_name,
             content=html_content,
             prev_link=prev_link,
-            next_link=next_link
+            next_link=next_link,
+            relative_path=relative_path
         )
 
         # 写入文件
@@ -578,29 +714,19 @@ def process_category(category_dir, category_name, output_dir):
     return articles
 
 
-def generate_category_index(category_name, display_name, articles, output_dir):
-    """生成 category 的 index.html"""
+def generate_category_index(category_name, display_name, articles, config, output_dir):
+    """生成 category 的 index.html - 步骤 2"""
     # 按日期排序
     articles = sorted(articles, key=lambda x: x['date'], reverse=True)
 
-    # 生成文章卡片 HTML（链接去掉 .html 后缀和 category 路径）
-    cards_html = ""
-    for article in articles:
-        # 去掉 category_name/ 前缀和 .html 后缀，因为 index.html 和文章在同一目录
-        filename = article['filename'].replace(f'{category_name}/', '').replace('.html', '')
-        cards_html += ARTICLE_CARD_TEMPLATE.format(
-            date=article['date'],
-            tag=article['tag'],
-            title=article['title'],
-            excerpt=article['excerpt'],
-            link=filename
-        ) + "\n"
-
-    # 生成索引页 HTML
-    html = CATEGORY_INDEX_TEMPLATE.format(
-        category_name=display_name,
-        article_count=len(articles),
-        articles=cards_html
+    # ========== 步骤 2: 生成 Category Index ==========
+    # 使用模块化模板生成分类索引页
+    html = build_category_index_html(
+        config=config,
+        category_name=category_name,
+        display_name=display_name,
+        articles=articles,
+        relative_path=''
     )
 
     # 写入文件到子目录下的 index.html
@@ -613,114 +739,10 @@ def generate_category_index(category_name, display_name, articles, output_dir):
 
 
 def generate_index_page(config, categories_info, output_dir):
-    """生成首页 index.html"""
-    site = config.get('site', {})
-    nav_menu = config.get('nav_menu', [])
-    hero = config.get('hero', {})
-    social = config.get('social', [])
-    footer = config.get('footer', {})
-
-    # 生成导航菜单
-    nav_html = ""
-    for item in nav_menu:
-        href = item.get('href', '#')
-        name = item.get('name', '')
-        is_active = 'active' if item.get('is_home') else ''
-        external = 'target="_blank"' if item.get('external') else ''
-        nav_html += f'<li><a href="{href}" class="nav-link {is_active}" {external}>{name}</a></li>\n                '
-
-    # 生成分类卡片 HTML
-    category_cards = ""
-    for cat in categories_info:
-        category_cards += f"""                <a href="{cat['name']}" class="category-card">
-                    <span class="category-card-name">{cat['display_name']}</span>
-                    <span class="category-card-count">{cat['count']} 篇</span>
-                </a>
-"""
-
-    # 生成社交链接
-    social_icons = {
-        'github': '<path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>',
-        'twitter': '<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>',
-        'email': '<path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>'
-    }
-
-    social_html = ""
-    for item in social:
-        url = item.get('url', '#')
-        name = item.get('name', '')
-        icon = item.get('icon', 'github')
-        icon_path = social_icons.get(icon, social_icons['github'])
-        target = 'target="_blank"' if item.get('external') or url.startswith('http') else ''
-        social_html += f"""                <a href="{url}" class="social-btn" aria-label="{name}" {target}>
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                        {icon_path}
-                    </svg>
-                </a>
-"""
-
-    # Hero 标题替换 author
-    hero_title = hero.get('title', '').format(author=site.get('author', 'Alex'))
-
-    # 生成首页 HTML
-    html = f"""<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{site.get('title', "Alex's Blog")} | {site.get('subtitle', '技术与思考')}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/styles.css">
-</head>
-<body>
-    <nav class="navbar" id="navbar">
-        <div class="nav-container">
-            <a href="index.html" class="nav-logo">
-                <span class="logo-icon">◈</span>
-                <span class="logo-text">{site.get('title', "Alex's Blog")}</span>
-            </a>
-            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-            </button>
-            <ul class="nav-menu" id="navMenu">
-                {nav_html}
-            </ul>
-        </div>
-    </nav>
-
-    <section class="hero" id="about">
-        <div class="hero-bg"></div>
-        <div class="hero-content">
-            <h1 class="hero-title">{hero_title}</h1>
-            <p class="hero-subtitle">{hero.get('subtitle', '')}</p>
-            <p class="hero-bio">
-                {hero.get('bio', '').replace(chr(10), '<br>')}
-            </p>
-
-            <div class="category-grid">
-                {category_cards}
-            </div>
-
-            <div class="hero-social">
-                {social_html}
-            </div>
-        </div>
-    </section>
-
-    <footer class="footer">
-        <div class="container">
-            <p class="footer-text">{footer.get('copyright', '')}</p>
-            <p class="footer-text">{footer.get('built_with', '')}</p>
-        </div>
-    </footer>
-
-    <script src="/script.js"></script>
-</body>
-</html>"""
+    """生成首页 index.html - 步骤 3"""
+    # ========== 步骤 3: 生成首页 ==========
+    # 使用模块化模板生成首页
+    html = build_index_html(config, categories_info)
 
     # 写入文件
     output_path = Path(output_dir) / "index.html"
@@ -787,6 +809,7 @@ def main():
     total_articles = 0
     categories_info = []  # 收集分类信息用于生成首页
 
+    # ========== 步骤 1 & 2: 处理所有分类 ==========
     # 遍历所有 category 目录
     for category_dir in sorted(docs_path.iterdir()):
         if not category_dir.is_dir():
@@ -797,12 +820,12 @@ def main():
 
         print(f"[处理] 分类: {display_name}")
 
-        # 处理该分类下的所有 md 文件
-        articles = process_category(category_dir, display_name, OUTPUT_DIR)
+        # 处理该分类下的所有 md 文件 (步骤1: 生成文章)
+        articles = process_category(category_dir, category_name, config, OUTPUT_DIR)
 
         if articles:
-            # 生成索引页
-            generate_category_index(category_name, display_name, articles, OUTPUT_DIR)
+            # 生成索引页 (步骤2: 生成 Category Index)
+            generate_category_index(category_name, display_name, articles, config, OUTPUT_DIR)
             total_articles += len(articles)
             # 收集分类信息
             categories_info.append({
@@ -813,7 +836,7 @@ def main():
         else:
             print(f"  [警告] 没有找到 Markdown 文件")
 
-    # 生成首页 index.html
+    # ========== 步骤 3: 生成首页 index.html ==========
     generate_index_page(config, categories_info, OUTPUT_DIR)
 
     print()
