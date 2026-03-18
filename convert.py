@@ -149,18 +149,15 @@ ARTICLE_EXTRA_HEAD = """    <link rel="stylesheet" href="https://cdnjs.cloudflar
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script>hljs.highlightAll();</script>
     <script>
-        window.MathJax = {{
-            tex: {{
-                inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
-                displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']]
-            }},
-            svg: {{ fontCache: 'global' }},
-            startup: {{
-                ready: () => {{
-                    MathJax.startup.defaultReady();
-                }}
-            }}
-        }};
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>"""
 
@@ -462,34 +459,50 @@ def convert_markdown_to_html(markdown_text):
     # 先处理代码块外部的内容
     html = re.sub(r'<(pre|code|table|tr|td|th|blockquote)(?:\s|>)', r'<\1>', html)
 
-    # 先处理 MathJax 公式，保护它们不被其他规则影响
-    # 块级公式 $$...$$ (必须先处理，因为行内公式的正则可能会误匹配)
+    # 第一步：先处理代码块，保护其内容不被后续处理影响
+    code_blocks = {}
+    code_counter = [0]
+
+    def protect_code_block(match):
+        code_counter[0] += 1
+        placeholder = f"__CODE_BLOCK_{code_counter[0]}__"
+        code_blocks[placeholder] = match.group(0)
+        return placeholder
+
+    # 保护所有代码块
+    html = re.sub(r'```(\w*)\n[\s\S]*?```', protect_code_block, html)
+
+    # 第二步：处理 MathJax 公式
+    # 块级公式 $$...$$
     math_blocks = {}
-    block_counter = [0]
+    math_counter = [0]
 
     def protect_math_block(match):
-        block_counter[0] += 1
-        placeholder = f"__MATH_BLOCK_{block_counter[0]}__"
+        math_counter[0] += 1
+        placeholder = f"__MATH_BLOCK_{math_counter[0]}__"
         math_blocks[placeholder] = match.group(0)
         return placeholder
 
-    # 先保护所有块级公式
+    # 保护所有块级公式
     html = re.sub(r'\$\$.+?\$\$', protect_math_block, html, flags=re.DOTALL)
 
     # 行内公式 $...$ - 直接保留，让 MathJax 处理
-    # 不再预先包裹 span，因为 MathJax 会自己识别
 
     # 恢复块级公式
     for placeholder, original in math_blocks.items():
         html = html.replace(placeholder, f'<p class="math-block">{original}</p>')
 
-    # 代码块 ```...```
-    html = re.sub(
-        r'```(\w*)\n(.*?)```',
-        r'<div class="code-block"><div class="code-header"><span class="code-lang">\1</span><button class="code-copy" onclick="copyCode(this)" aria-label="Copy code"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button></div><pre><code class="language-\1">\2</code></pre></div>',
-        html,
-        flags=re.DOTALL
-    )
+    # 第三步：恢复代码块
+    for placeholder, original in code_blocks.items():
+        # 转换代码块内容
+        code_content = original
+        # 提取语言
+        lang_match = re.match(r'```(\w*)\n([\s\S]*)```', code_content)
+        if lang_match:
+            lang = lang_match.group(1) or 'text'
+            content = lang_match.group(2)
+            code_content = f'<div class="code-block"><div class="code-header"><span class="code-lang">{lang}</span><button class="code-copy" onclick="copyCode(this)" aria-label="Copy code"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button></div><pre><code class="language-{lang}">{content}</code></pre></div>'
+        html = html.replace(placeholder, code_content)
 
     # 行内代码 `...`
     html = re.sub(r'`([^`]+)`', r'<code class="inline-code">\1</code>', html)
@@ -580,7 +593,8 @@ def convert_markdown_to_html(markdown_text):
                 for i, cell in enumerate(cells):
                     align = align_cells[i] if i < len(align_cells) else ''
                     style = f' style="text-align:{align}"' if align else ''
-                    tbody += f'<td{style}>{cell}</td>'
+                    label = header_cells[i] if i < len(header_cells) else ''
+                    tbody += f'<td data-label="{label}"{style}>{cell}</td>'
                 tbody += '</tr>'
         tbody += '</tbody>'
 
