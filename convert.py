@@ -259,7 +259,7 @@ def build_nav_html(config, active_href=''):
     site_title = config.get('site', {}).get('title', "Alex's Blog")
 
     # 首页链接
-    home_link = "index.html"
+    home_link = "/"
 
     nav_items = ""
     for item in nav_menu:
@@ -405,7 +405,8 @@ def build_index_html(config, categories_info):
     # 生成分类卡片
     category_cards = ""
     for cat in categories_info:
-        category_cards += f"""                <a href="{cat['name']}" class="category-card">
+        cat_href = cat.get('href', cat['name'])
+        category_cards += f"""                <a href="{cat_href}" class="category-card">
                     <span class="category-card-name">{cat['display_name']}</span>
                     <span class="category-card-count">{cat['count']} 篇</span>
                 </a>
@@ -866,10 +867,19 @@ def main():
             # 生成索引页 (步骤2: 生成 Category Index)
             generate_category_index(category_name, display_name, articles, config, OUTPUT_DIR)
             total_articles += len(articles)
+
+            # 从 config 获取 href
+            cat_href = category_name
+            for item in config.get('nav_menu', []):
+                if item.get('name') == display_name:
+                    cat_href = item.get('href', category_name)
+                    break
+
             # 收集分类信息
             categories_info.append({
                 'name': category_name,
                 'display_name': display_name,
+                'href': cat_href,
                 'count': len(articles)
             })
         else:
