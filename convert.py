@@ -253,16 +253,13 @@ HERO_SECTION = """    <section class="hero" id="about">
 # 模板组装函数 - 按生成顺序
 # ============================================================
 
-def build_nav_html(config, active_href='', relative_path=''):
-    """构建导航栏 HTML"""
+def build_nav_html(config, active_href=''):
+    """构建导航栏 HTML - 直接使用 config 中的 href"""
     nav_menu = config.get('nav_menu', [])
     site_title = config.get('site', {}).get('title', "Alex's Blog")
 
-    # 计算相对路径
-    if relative_path:
-        home_link = f"{relative_path}index.html"
-    else:
-        home_link = "index.html"
+    # 首页链接
+    home_link = "index.html"
 
     nav_items = ""
     for item in nav_menu:
@@ -270,19 +267,11 @@ def build_nav_html(config, active_href='', relative_path=''):
         name = item.get('name', '')
         is_external = item.get('external', False)
 
-        # 保存原始 href 用于匹配激活状态
-        original_href = href
-
-        # 处理链接前缀
-        if not is_external and not href.startswith('#') and not href.startswith('http'):
-            if relative_path:
-                href = f"{relative_path}{href}"
-
-        # 处理激活状态（使用原始 href 匹配，不包含相对路径前缀）
-        is_active = 'active' if (active_href and original_href == active_href) else ''
+        # 处理激活状态
+        is_active = 'active' if (active_href and href == active_href) else ''
 
         # 外部链接处理
-        target = 'target="_blank"' if is_external or href.startswith('http') else ''
+        target = 'target="_blank"' if is_external or href.startswith('http') or href.startswith('mailto:') else ''
 
         nav_items += f'<li><a href="{href}" class="nav-link {is_active}" {target}>{name}</a></li>\n                '
 
@@ -323,7 +312,7 @@ def build_article_html(config, title, date, category, content, prev_link, next_l
         extra_head=ARTICLE_EXTRA_HEAD
     )
 
-    html += build_nav_html(config, active_href='', relative_path=relative_path)
+    html += build_nav_html(config, active_href='')
     html += ARTICLE_CONTENT.format(
         date=date,
         category=category,
@@ -355,9 +344,8 @@ def build_category_index_html(config, category_name, display_name, articles, rel
         extra_head=''
     )
 
-    # 导航栏（Category 页需要激活对应 category，并使用 ../ 相对路径）
-    nav_relative_path = '../' if not relative_path else relative_path
-    html += build_nav_html(config, active_href=category_name, relative_path=nav_relative_path)
+    # 导航栏
+    html += build_nav_html(config, active_href=category_name)
 
     # Category 头部
     html += CATEGORY_HEADER.format(
@@ -403,7 +391,7 @@ def build_index_html(config, categories_info):
     )
 
     # 导航栏（首页激活）
-    html += build_nav_html(config, active_href='index.html', relative_path='')
+    html += build_nav_html(config, active_href='index.html')
 
     # 生成导航菜单项（用于首页）
     nav_html = ""
