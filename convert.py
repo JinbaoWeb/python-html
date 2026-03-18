@@ -310,8 +310,13 @@ def build_article_html(config, title, date, category, content, prev_link, next_l
     """组装文章页面 HTML"""
     site = config.get('site', {})
 
-    css_path = '/'
-    script_path = '/'
+    # 计算资源路径
+    if relative_path:
+        css_path = relative_path
+        script_path = relative_path
+    else:
+        css_path = '/'
+        script_path = '/'
 
     # 构建各部分
     head_title = f"{title} | {site.get('title', 'Alex\'s Blog')}"
@@ -350,7 +355,7 @@ def build_category_index_html(config, category_name, display_name, articles, rel
         script_path = '../'
 
     # 构建各部分
-    head_title = f"{display_name} | {site.get('title', 'Alex's Blog')}"
+    head_title = f"{display_name} | {site.get('title', '')}"
 
     html = HTML_HEAD.format(
         title=head_title,
