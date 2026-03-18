@@ -937,14 +937,17 @@ a:hover {
 
     .table thead {
         display: none;
+        width: 100%;
     }
 
     .table tbody {
         display: block;
+        width: 100%;
     }
 
     .table tbody tr {
         display: block;
+        width: 100%;
         margin-bottom: var(--spacing-sm);
         border: 1px solid var(--border-color);
         border-radius: 8px;
@@ -962,6 +965,8 @@ a:hover {
         padding: 10px 12px;
         border-bottom: 1px solid var(--border-color);
         text-align: right;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .table td:last-child {
