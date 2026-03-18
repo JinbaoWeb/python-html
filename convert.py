@@ -311,12 +311,8 @@ def build_article_html(config, title, date, category, content, prev_link, next_l
     site = config.get('site', {})
 
     # 计算资源路径
-    if relative_path:
-        css_path = relative_path
-        script_path = relative_path
-    else:
-        css_path = '/'
-        script_path = '/'
+    css_path = '/'
+    script_path = '/'
 
     # 构建各部分
     head_title = f"{title} | {site.get('title', 'Alex\'s Blog')}"
@@ -346,13 +342,9 @@ def build_category_index_html(config, category_name, display_name, articles, rel
     """组装 Category 索引页 HTML"""
     site = config.get('site', {})
 
-    # 计算资源路径（Category 页在子目录，使用 ../）
-    if relative_path:
-        css_path = relative_path
-        script_path = relative_path
-    else:
-        css_path = '../'
-        script_path = '../'
+    # 计算资源路径（Category 页在子目录，默认使用 ../）
+    css_path = relative_path if relative_path else '../'
+    script_path = relative_path if relative_path else '../'
 
     # 构建各部分
     head_title = f"{display_name} | {site.get('title', '')}"
@@ -380,7 +372,7 @@ def build_category_index_html(config, category_name, display_name, articles, rel
         filename = article['filename'].replace(f'{category_name}/', '').replace('.html', '')
         cards_html += ARTICLE_CARD.format(
             date=article['date'],
-            tag=article['tag'],
+            tag=display_name,
             title=article['title'],
             excerpt=article['excerpt'],
             link=filename
