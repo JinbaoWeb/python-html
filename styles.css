@@ -927,56 +927,11 @@ a:hover {
     background: var(--bg-tertiary);
 }
 
-/* 响应式表格 - 移动端卡片式布局 */
+/* 响应式表格 - 横向滚动 */
 @media (max-width: 768px) {
     .table {
         display: block;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
-    }
-
-    .table thead {
-        display: none;
-        width: 100%;
-    }
-
-    .table tbody {
-        display: block;
-        width: 100%;
-    }
-
-    .table tbody tr {
-        display: block;
-        width: 100%;
-        margin-bottom: var(--spacing-sm);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        background: var(--bg-secondary);
-    }
-
-    .table tbody tr:hover {
-        background: var(--bg-tertiary);
-    }
-
-    .table td {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px 12px;
-        border-bottom: 1px solid var(--border-color);
-        text-align: right;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .table td:last-child {
-        border-bottom: none;
-    }
-
-    .table td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        color: var(--text-primary);
-        text-align: left;
     }
 }
