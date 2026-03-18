@@ -550,6 +550,60 @@ def convert_markdown_to_html(markdown_text):
     # 删除线 ~~...~~
     html = re.sub(r'~~([^~]+)~~', r'<del>\1</del>', html)
 
+    # 表格处理
+    def convert_table(match):
+        lines = match.group(0).strip().split('\n')
+        if len(lines) < 2:
+            return match.group(0)
+
+        # 解析表头
+        header_cells = [cell.strip() for cell in lines[0].strip('|').split('|')]
+
+        # 解析对齐方式
+        align_cells = []
+        if len(lines) > 1:
+            align_line = lines[1].strip('|').split('|')
+            for cell in align_line:
+                cell = cell.strip()
+                if cell.startswith(':') and cell.endswith(':'):
+                    align_cells.append('center')
+                elif cell.endswith(':'):
+                    align_cells.append('right')
+                elif cell.startswith(':'):
+                    align_cells.append('left')
+                else:
+                    align_cells.append('')
+
+        # 如果没有对齐行，使用默认对齐
+        while len(align_cells) < len(header_cells):
+            align_cells.append('')
+
+        # 生成表头 HTML
+        thead = '<thead><tr>'
+        for i, cell in enumerate(header_cells):
+            align = align_cells[i] if i < len(align_cells) else ''
+            style = f' style="text-align:{align}"' if align else ''
+            thead += f'<th{style}>{cell}</th>'
+        thead += '</tr></thead>'
+
+        # 生成表格 body
+        tbody = '<tbody>'
+        for line in lines[2:]:
+            if line.strip().startswith('|'):
+                cells = [c.strip() for c in line.strip('|').split('|')]
+                tbody += '<tr>'
+                for i, cell in enumerate(cells):
+                    align = align_cells[i] if i < len(align_cells) else ''
+                    style = f' style="text-align:{align}"' if align else ''
+                    tbody += f'<td{style}>{cell}</td>'
+                tbody += '</tr>'
+        tbody += '</tbody>'
+
+        return f'<table class="table">{thead}{tbody}</table>'
+
+    # 匹配整个表格（至少2行，每行以 | 开头或结尾）
+    html = re.sub(r'^\|.+\|(?:\n\|.+\|)+', convert_table, html, flags=re.MULTILINE)
+
     # 链接 [text](url)
     html = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2">\1</a>', html)
 
