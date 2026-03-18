@@ -532,8 +532,8 @@ def convert_markdown_to_html(markdown_text):
     html = re.sub(r'<p class="math-block">.*?</p>', replace_math, html, flags=re.DOTALL)
 
     # 粗体 **...** 或 __...__ (只匹配独立的，不在公式内)
-    # 匹配整个 **...** 块
-    html = re.sub(r'\*\*([^*]+)\*\*', r'<strong>\1</strong>', html)
+    # 匹配整个 **...** 块（使用非贪婪匹配）
+    html = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', html)
     # 匹配整个 __...__ 块，但排除下划线后跟字母数字的情况
     html = re.sub(r'__(?![\s\S]*?[a-zA-Z0-9]_|[\s\S]*?\|)([^_]+)__', r'<strong>\1</strong>', html)
 
