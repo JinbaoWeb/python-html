@@ -1,16 +1,16 @@
 /* ==================== CSS 变量 ==================== */
 :root {
-    /* 颜色 - 暗色主题 (默认) */
-    --bg-primary: #0d1117;
-    --bg-secondary: #161b22;
-    --bg-tertiary: #1c2128;
-    --border-color: #30363d;
-    --text-primary: #e6edf3;
-    --text-secondary: #8b949e;
-    --text-muted: #6e7681;
-    --accent-primary: #58a6ff;
-    --accent-hover: #79c0ff;
-    --accent-glow: rgba(88, 166, 255, 0.15);
+    /* 颜色 - 明亮主题 */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #e9ecef;
+    --border-color: #dee2e6;
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --text-muted: #adb5bd;
+    --accent-primary: #0969da;
+    --accent-hover: #0550ae;
+    --accent-glow: rgba(9, 105, 218, 0.1);
 
     /* 字体 */
     --font-display: 'Playfair Display', Georgia, serif;
@@ -31,10 +31,10 @@
     --transition-slow: 0.4s ease;
 
     /* 阴影 */
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-    --shadow-glow: 0 0 30px rgba(88, 166, 255, 0.1);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+    --shadow-glow: 0 0 30px rgba(9, 105, 218, 0.1);
 }
 
 /* ==================== 重置 & 基础 ==================== */
