@@ -145,7 +145,7 @@ HTML_BASE_SCRIPTS = """    <script src="{script_path}script.js"></script>
 # ---------- 文章页面模块 ----------
 
 # 文章页面专用头部（包含 highlight.js 和 MathJax）
-ARTICLE_EXTRA_HEAD = """    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+ARTICLE_EXTRA_HEAD = """    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script>hljs.highlightAll();</script>
     <script>
@@ -476,12 +476,8 @@ def convert_markdown_to_html(markdown_text):
     # 先保护所有块级公式
     html = re.sub(r'\$\$.+?\$\$', protect_math_block, html, flags=re.DOTALL)
 
-    # 行内公式 $...$ (只在单行内匹配，不跨越 $$)
-    html = re.sub(
-        r'\$([^\$\n]+?)\$',
-        r'<span class="math-inline">$\1$</span>',
-        html
-    )
+    # 行内公式 $...$ - 直接保留，让 MathJax 处理
+    # 不再预先包裹 span，因为 MathJax 会自己识别
 
     # 恢复块级公式
     for placeholder, original in math_blocks.items():
