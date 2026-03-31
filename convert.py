@@ -53,15 +53,33 @@ DEFAULT_CONFIG = {
     }
 }
 
-# Category 映射（文件夹名 -> 显示名称）- 从 nav_menu 中自动提取
+# Category 映射（目录名 -> 显示名称）- 从 nav_menu 中自动提取
 CATEGORY_NAMES = {}
+
+
+def normalize_category_key(href_or_dir: str) -> str:
+    """将目录名或 href 规范化为 category key（用于 nav_menu 匹配）"""
+    if not href_or_dir:
+        return ""
+    # 去掉查询参数与锚点
+    clean = href_or_dir.split("?", 1)[0].split("#", 1)[0].strip("/")
+    # 去掉首页和 html 后缀
+    clean = re.sub(r'(^|/)index\.html$', '', clean)
+    clean = re.sub(r'\.html$', '', clean)
+    return clean.strip("/")
 
 def load_config():
     """加载配置文件"""
     config = DEFAULT_CONFIG.copy()
 
-    config_path = Path(DOCS_DIR) / "_config.yml"
-    if config_path.exists():
+    config_path = None
+    for candidate in ("_config.yaml", "_config.yml"):
+        path = Path(DOCS_DIR) / candidate
+        if path.exists():
+            config_path = path
+            break
+
+    if config_path:
         try:
             with open(config_path, 'r', encoding='utf-8') as f:
                 user_config = yaml.safe_load(f)
@@ -77,13 +95,16 @@ def load_config():
 
     # 从 nav_menu 中提取 Category 映射
     global CATEGORY_NAMES
+    CATEGORY_NAMES.clear()
     for item in config.get('nav_menu', []):
         href = item.get('href', '')
         name = item.get('name', '')
         # 排除首页、外部链接和锚点
         if href and not item.get('external') and not href.startswith('#') and not href.startswith('http'):
             if not item.get('is_home'):
-                CATEGORY_NAMES[href] = name
+                category_key = normalize_category_key(href)
+                if category_key:
+                    CATEGORY_NAMES[category_key] = name
 
     return config
 
@@ -866,7 +887,8 @@ def main():
             continue
 
         category_name = category_dir.name
-        display_name = CATEGORY_NAMES.get(category_name, category_name)
+        category_key = normalize_category_key(category_name)
+        display_name = CATEGORY_NAMES.get(category_key, category_name)
 
         print(f"[处理] 分类: {display_name}")
 
@@ -881,8 +903,9 @@ def main():
             # 从 config 获取 href
             cat_href = category_name
             for item in config.get('nav_menu', []):
-                if item.get('name') == display_name:
-                    cat_href = item.get('href', category_name)
+                href = item.get('href', '')
+                if normalize_category_key(href) == category_key:
+                    cat_href = href or category_name
                     break
 
             # 收集分类信息
